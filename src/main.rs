@@ -48,7 +48,7 @@ use std::io::{BufRead, BufReader};
 
 use regex::Regex;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct DocumentVector<'a> {
     file_name: &'a str,
     statistics: BTreeMap<String, usize>
@@ -60,13 +60,19 @@ impl<'a> DocumentVector<'a> {
     }
 }
 
-// impl<'a> Mul for DocumentVector<'a> {
-//     type Output = usize;
-//
-//     fn mul(self, rhs: Self) -> Self::Output {
-//
-//     }
-// }
+impl<'a> Mul for DocumentVector<'a> {
+    type Output = usize;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut sum:usize = 0;
+        for (k, v) in &self.statistics {
+            if rhs.statistics.contains_key(k) {
+                sum += v * rhs.statistics[k];
+            }
+        }
+        sum
+    }
+}
 
 // TODO(elsuizo:2020-07-09): no era que con AsRef<Path> ya se solucionaba todo???
 fn list_files<P>(folder_path: P) -> std::io::Result<Vec<String>>
@@ -125,11 +131,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         docs.push(DocumentVector::new(&file_name, statistics));
     }
 
-    let b1 = &docs[0].statistics;
-    let b2 = &docs[1].statistics;
+    let d1 = &docs[0];
+    let d2 = &docs[1];
 
-    println!("b1: {:?}", b1);
-    println!("b2: {:?}", b2);
+    println!("sum: {}", d1.clone() * d2.clone());
 
     Ok(())
 }
