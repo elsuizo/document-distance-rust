@@ -34,9 +34,16 @@
 // - [X] split the document into words
 //      - [X] first read the file
 // - [X] compute the frequencies of the words
-// - [  ] compute the dot product
+// - [X] compute the dot product
+// - [  ] compute the angle betweeen two DocumentVectors
+// - [  ] user command line inputs
+// - [  ] maybe another version without regex
+// - [  ] test the time with a 1MegaByte file (the best python time=0.2sec)
 
+// NOTE(elsuizo:2020-07-12): ahora el problema es que los vectores deberian
+// estar normalizados para poder saber los angulos entre ellos
 extern crate regex;
+extern crate structopt;
 
 use std::error::Error;
 use std::path::Path;
@@ -58,7 +65,19 @@ impl<'a> DocumentVector<'a> {
     fn new(file_name: &'a str, statistics: BTreeMap<String, usize>) -> Self {
         DocumentVector{file_name, statistics}
     }
+
+    // TODO(elsuizo:2020-07-12): ver si se pueden salvar algunos clones...
+    fn angle_between(&self, d2: &Self) -> f32 {
+        let self_square = (self.clone()) * (self.clone());
+        let d2_square = d2.clone() * d2.clone();
+        let numerator = (self.clone() * d2.clone()) as f32;
+        let denominator = f32::sqrt((self_square * d2_square) as f32);
+
+        f32::acos(numerator / denominator)
+
+    }
 }
+
 
 impl<'a> Mul for DocumentVector<'a> {
     type Output = usize;
@@ -101,9 +120,8 @@ fn read_text_file(path: &Path) -> std::io::Result<Vec<String>> {
 }
 
 fn count_words(file_input: Vec<String>) -> std::io::Result<BTreeMap<String, usize>> {
-
     let mut counts = BTreeMap::new();
-    // NOTE(elsuizo:2020-04-30): estaria bueno saber bien que es lo que filtra este regex
+
     let word_regex = Regex::new(r"(?i)[a-z']+").expect("Could not compile regex");
 
     for line in file_input {
@@ -119,7 +137,7 @@ fn count_words(file_input: Vec<String>) -> std::io::Result<BTreeMap<String, usiz
 
 fn main() -> Result<(), Box<dyn Error>> {
 
-    let files_dir = "files_dot_test";
+    let files_dir = "files";
     // read all the files in the given folder
     let files = list_files(files_dir)?;
 
@@ -134,7 +152,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let d1 = &docs[0];
     let d2 = &docs[1];
 
-    println!("sum: {}", d1.clone() * d2.clone());
+    println!("sum: {}", d2.angle_between(d1));
+
+    // println!("d2: {:?}", d2);
 
     Ok(())
 }
