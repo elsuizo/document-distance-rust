@@ -40,8 +40,6 @@
 // - [  ] maybe another version without regex
 // - [  ] test the time with a 1MegaByte file (the best python time=0.2sec)
 
-// NOTE(elsuizo:2020-07-12): ahora el problema es que los vectores deberian
-// estar normalizados para poder saber los angulos entre ellos
 extern crate regex;
 extern crate structopt;
 
@@ -119,10 +117,10 @@ fn read_text_file(path: &Path) -> std::io::Result<Vec<String>> {
     Ok(lines)
 }
 
-fn count_words(file_input: Vec<String>) -> std::io::Result<BTreeMap<String, usize>> {
+fn count_words(file_input: Vec<String>) -> Result<BTreeMap<String, usize>, Box<dyn Error>> {
     let mut counts = BTreeMap::new();
 
-    let word_regex = Regex::new(r"(?i)[a-z']+").expect("Could not compile regex");
+    let word_regex = Regex::new(r"(?i)[a-z']+")?;
 
     for line in file_input {
         let words = word_regex
